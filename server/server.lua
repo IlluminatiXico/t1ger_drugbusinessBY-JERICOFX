@@ -179,7 +179,7 @@ end)
 RegisterServerEvent('t1ger_drugbusiness:seizeStockSupplies')
 AddEventHandler('t1ger_drugbusiness:seizeStockSupplies', function(plyLabID)
     local xPlayer =  RSCore.Functions.GetPlayer(source)
-    print("ID recived "..plyLabID)
+  
     -- GET TARGET PLAYER:
     local target = nil
     MySQL.Async.fetchAll("SELECT identifier FROM t1ger_druglabs WHERE labID = @labID",{['@labID'] = plyLabID}, function(user)
@@ -187,8 +187,9 @@ AddEventHandler('t1ger_drugbusiness:seizeStockSupplies', function(plyLabID)
         if user[1].identifier ~= nil then
             local  targetIdentifier = user[1].identifier
             Wait(200)
-            target =  RSCore.Functions.GetPlayer(targetIdentifier)
+            target =  RSCore.Functions.GetPlayer(targetIdentifier).PlayerData.steam
             if target ~= nil then
+                print("ID recived "..tostring(target))
                 MySQL.Async.fetchAll("SELECT * FROM t1ger_druglabs WHERE labID = @labID",{['@labID'] = plyLabID}, function(data)
                     if data[1] ~= nil then
                         MySQL.Sync.execute("UPDATE t1ger_druglabs SET supplies = @supplies, stock = @stock WHERE labID = @labID", {
