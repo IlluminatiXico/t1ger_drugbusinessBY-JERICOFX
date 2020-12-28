@@ -12,7 +12,7 @@ local _
 Citizen.CreateThread(function()
 	while RSCore == nil do
 		TriggerEvent('RSCore:GetObject', function(obj) RSCore = obj end)
-		Citizen.Wait(10)
+		Citizen.Wait(200)
 
 	end
 

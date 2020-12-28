@@ -6,19 +6,7 @@ insideShell = false
 plyLabID    = 0
 emptyLabs   = {}
 playerloaded = false
--- Code goes here:
---Citizen.CreateThread(function()
---	while not RSCore do
---		TriggerEvent('RSCore:GetObject', function(obj) RSCore = obj end)
---		Citizen.Wait(200)
---	end
---	if RSCore ~= nil then
---
---		print("wiii")
---	end
---
---
---end)
+
 Citizen.CreateThread(function()
 	while true do
 		Citizen.Wait(1)
@@ -156,9 +144,9 @@ Citizen.CreateThread(function()
 								if IsControlJustPressed(0, Config.KeyToRaidLab) then
 									TriggerServerEvent('t1ger_drugbusiness:alertLabOwner', k, "police")
 									RequestAnimDict("timetable@jimmy@doorknock@")
-									while not HasAnimDictLoaded("timetable@jimmy@doorknock@") do
+									--[[ while not HasAnimDictLoaded("timetable@jimmy@doorknock@") do
 										Citizen.Wait(10)
-									end
+									end ]]
 									TaskPlayAnim(player, "timetable@jimmy@doorknock@", "knockdoor_idle", 8.0, 8.0, -1, 4, 0, 0, 0, 0)
 									RSCore.Functions.Progressbar("sell_pawn_items", Lang['prog_bar_raid_door'], 1000, false, true, {}, {}, {}, {}, function() -- Done
 
@@ -394,9 +382,9 @@ function SpawnDrugLab(id, val)
 	print("377")
 			-- Screen Fade Out:
 			DoScreenFadeOut(1000)
-			while not IsScreenFadedOut() do
+		--[[ 	while not IsScreenFadedOut() do
 				Wait(0)
-			end
+			end ]]
 			Citizen.Wait(500)
 			-- Teleport Player:
 			local offset = Config.Offsets[prop]
@@ -482,9 +470,9 @@ function OpenLaptopFunction(pos, heading, id, val)
 			local animDict = "mp_fbi_heist"
 			local animName = "loop"
 			RequestAnimDict(animDict)
-			while not HasAnimDictLoaded(animDict) do
+			--[[ while not HasAnimDictLoaded(animDict) do
 				Citizen.Wait(10)
-			end
+			end ]]
 			TaskPlayAnimAdvanced(player, animDict, animName, pos[1], pos[2], pos[3], 0.0, 0.0, heading, 3.0, 1.0, -1, 30, 1.0, 0, 0)
 			--exports['progressBars']:startUI((2000), Lang['prog_bar_using_laptop'])
 			RSCore.Functions.Progressbar("sell_pawn_items", Lang['prog_bar_using_laptop'], 2000, false, true, {}, {}, {}, {}, function() -- Done
@@ -716,7 +704,6 @@ function OpenLaptopStockMenu()
 					local menu            = assert(MenuV)
 
 					local OpenLaptopstock = MenuV:CreateMenu("Lab Stock", '', 'center', 255, 0, 0, 'size-150')
-					--local OpenDrug = MenuV:CreateMenu('Rename', '', 'topleft', 255, 0, 0, 'size-150')
 					MenuV:OpenMenu(OpenLaptopstock, function()
 					end)
 
