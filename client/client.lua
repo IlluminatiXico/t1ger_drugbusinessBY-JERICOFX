@@ -144,16 +144,13 @@ Citizen.CreateThread(function()
 								if IsControlJustPressed(0, Config.KeyToRaidLab) then
 									TriggerServerEvent('t1ger_drugbusiness:alertLabOwner', k, "police")
 									RequestAnimDict("timetable@jimmy@doorknock@")
-									--[[ while not HasAnimDictLoaded("timetable@jimmy@doorknock@") do
-										Citizen.Wait(10)
-									end ]]
+
 									TaskPlayAnim(player, "timetable@jimmy@doorknock@", "knockdoor_idle", 8.0, 8.0, -1, 4, 0, 0, 0, 0)
 									RSCore.Functions.Progressbar("sell_pawn_items", Lang['prog_bar_raid_door'], 1000, false, true, {}, {}, {}, {}, function() -- Done
 
 									end, function() -- Cancel
 								
 									end)
-									--exports['progressBars']:startUI(((Config.WaitTimeUntilRaid * 1000)), Lang['prog_bar_raid_door'])
 									Citizen.Wait((Config.WaitTimeUntilRaid * 1000))
 									Wait(150)
 									ClearPedTasks(player)
@@ -291,11 +288,11 @@ function DrugLabManageMenu(id, val)
 			if select == 'enter_drug_lab' then
 				--   labMenu = nil
 				SpawnDrugLab(id, val)
-
+				MenuV:CloseMenu(LabManager)
 
 			elseif select == "sell_drug_lab" then
 				SellDrugLabMenu(id, val)
-
+				MenuV:CloseMenu(LabManager)
 			end
 
 		end })
@@ -413,13 +410,15 @@ function SpawnDrugLab(id, val)
 
 				-- laptop:
 				if offset.laptop ~= nil then
-					if GetDistanceBetweenCoords(coords.x, coords.y, coords.z, laptop[1], laptop[2], laptop[3], false) <= 2.0 and not inLaptop then
+					if GetDistanceBetweenCoords(coords.x, coords.y, coords.z, laptop[1], laptop[2], laptop[3], false) <= 2.0 and  inLaptop == false then
 						DrawText3Ds(laptop[1], laptop[2], laptop[3], Lang['press_to_use_laptop'])
-						if IsControlJustPressed(0, Config.KeyToLaptop) and not inLaptop then
+						if IsControlJustPressed(0, Config.KeyToLaptop) and  inLaptop == false then
 							inLaptop = true
 							OpenLaptopFunction(laptopAnimPos, laptopAnimHead, id, val)
+							inLaptop = false
 						end
 					end
+					inLaptop = false
 				end
 
 				-- exit:
@@ -726,7 +725,8 @@ function OpenLaptopStockMenu()
 						end })
 					end
 
-					function StockSellData()
+
+function StockSellData()
 						local player        = GetPlayerPed(-1)
 						local stockLevel    = 0
 						local multiplier    = 0
@@ -789,7 +789,7 @@ function OpenLaptopSellMenu(stockLevel, stockValue)
 						for k, v in ipairs(elements) do
 							local button = OpenLaptop:AddButton({ icon = "🧑‍🔧 ", label = v.label, value = v, select = function(btn)
 								local select = btn.Value.value
-								if (select == 'return_to_stock_menu') then
+								if select == 'return_to_stock_menu' then
 
 									OpenLaptopStockMenu()
 								end
@@ -803,6 +803,7 @@ function OpenLaptopSellMenu(stockLevel, stockValue)
 												id    = math.random(1, #Config.SellStock)
 											end
 											if curID == 100 then
+												print(curID)
 												ShowNotifyESX(Lang['no_available_buyers'])
 											else
 												sellingStock                 = true
@@ -833,6 +834,7 @@ end
 
 RegisterNetEvent('t1ger_drugbusiness:StockDelivery')
 AddEventHandler('t1ger_drugbusiness:StockDelivery', function(id, stockLevel, stockValue)
+	print("STOCKDELIVERY")
 							local player                                                 = GetPlayerPed(-1)
 							local soldStock                                              = false
 							local num                                                    = Config.SellStock[id]
@@ -842,6 +844,8 @@ AddEventHandler('t1ger_drugbusiness:StockDelivery', function(id, stockLevel, sto
 							local notifySound1, notifySound2, notifySound3, notifySound4 = false, false, false, false
 
 							while not soldStock and not endStockJob do
+								print("notsold "..tostring(soldStock))
+								print("endtosck"..tostring(endStockJob))
 								Citizen.Wait(1)
 
 								if num.started then
@@ -864,7 +868,7 @@ AddEventHandler('t1ger_drugbusiness:StockDelivery', function(id, stockLevel, sto
 										stockVehSpawned = true
 										Citizen.Wait(200)
 										stockVehModel = Config.StockSellVeh
-										RSCore.Functions.SpawnVehicle(stockVehModel, { x = startPos[1], y = startPos[2], z = startPos[3] }, startPos[4], function(veh)
+										RSCore.Functions.SpawnVehicle(stockVehModel, function(veh)
 											SetEntityCoordsNoOffset(veh, startPos[1], startPos[2], startPos[3])
 											SetEntityHeading(veh, 120.0)
 											FreezeEntityPosition(veh, true)
@@ -873,7 +877,7 @@ AddEventHandler('t1ger_drugbusiness:StockDelivery', function(id, stockLevel, sto
 											SetEntityAsMissionEntity(stockVeh, true, true)
 											stockVeh = veh
 											SetVehicleDoorsLockedForAllPlayers(stockVeh, false)
-										end)
+										end,{ x = startPos[1], y = startPos[2], z = startPos[3] })
 									end
 
 									-- Check if player is in job vehicle:
