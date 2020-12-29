@@ -10,7 +10,7 @@ RegisterServerEvent('t1ger_drugbusiness:getPlyLabs')
 AddEventHandler('t1ger_drugbusiness:getPlyLabs', function()
     local xPlayer =  RSCore.Functions.GetPlayer(source)
  
-    RSCore.Functions.ExecuteSql(false,"SELECT `labID` FROM `t1ger_druglabs` WHERE `identifier` = '@"..xPlayer.PlayerData.citizenid.."'", function(data)
+    exports['ghmattimysql']:execute("SELECT `labID` FROM `t1ger_druglabs` WHERE `identifier` = '"..xPlayer.PlayerData.citizenid.."'", function(data)
         local labID = 0
         if data[1] ~= nil then
             labID = data[1].labID
@@ -34,10 +34,10 @@ end)
 -- Remove Stock:
 RegisterServerEvent('t1ger_drugbusiness:removeStock')
 AddEventHandler('t1ger_drugbusiness:removeStock',function(plyLabID, stockLevel)
-    RSCore.Functions.ExecuteSql(false, "SELECT `stock` FROM `t1ger_druglabs` WHERE `labID` = '"..plyLabID.."'", function(data)
+    exports['ghmattimysql']:execute( "SELECT `stock` FROM `t1ger_druglabs` WHERE `labID` = '"..plyLabID.."'", function(data)
         if data[1].stock ~= nil then
             local stock = data[1].stock
-            RSCore.Functions.ExecuteSql(false, "UPDATE `t1ger_druglabs` SET `stock` = 0 WHERE `labID` = '"..plyLabID.."'")
+            exports['ghmattimysql']:execute( "UPDATE `t1ger_druglabs` SET `stock` = 0 WHERE `labID` = '"..plyLabID.."'")
         end
     end)
 end)
@@ -46,7 +46,7 @@ end)
 RSCore.Functions.CreateCallback('t1ger_drugbusiness:getTakenLabs',function(source, cb)
     local xPlayer =  RSCore.Functions.GetPlayer(source)
     local takenLabs = {}
-    RSCore.Functions.ExecuteSql("SELECT `labID` FROM `t1ger_druglabs`", function(data)
+    exports['ghmattimysql']:execute("SELECT `labID` FROM `t1ger_druglabs`", function(data)
         for k,v in pairs(data) do
             table.insert(takenLabs,{id = v.labID})
         end
@@ -69,7 +69,7 @@ end)
 		else
 			xPlayer.Functions.RemoveMoney("bank", val.price)
 		end
-        RSCore.Functions.ExecuteSql(false,"INSERT INTO `t1ger_druglabs` (identifier, labID) VALUES ('"..xPlayer.PlayerData.citizenid.."','"..id.."'")       
+        exports['ghmattimysql']:execute("INSERT INTO t1ger_druglabs (identifier, labID) VALUES (@identifier, @labID)", {['identifier'] = xPlayer.PlayerData.steam, ['labID'] = id})      
         cb(true)
     else
         cb(false)
@@ -79,10 +79,10 @@ end)
 -- Sell Drug Lab:
  RSCore.Functions.CreateCallback('t1ger_drugbusiness:sellDrugLab',function(source, cb, id, val, sellPrice)
     local xPlayer =  RSCore.Functions.GetPlayer(source)
-    RSCore.Functions.ExecuteSql(false, "SELECT `labID` FROM `t1ger_druglabs` WHERE `identifier` = '"..xPlayer.PlayerData.citizenid.."'", function(data)
+    exports['ghmattimysql']:execute( "SELECT `labID` FROM `t1ger_druglabs` WHERE `identifier` = '"..xPlayer.PlayerData.citizenid.."'", function(data)
         if data[1].labID ~= nil then 
             if data[1].labID == id then
-                RSCore.Functions.ExecuteSql(false, "DELETE FROM `t1ger_druglabs` WHERE `labID` = '"..id.."'")
+                exports['ghmattimysql']:execute( "DELETE FROM `t1ger_druglabs` WHERE `labID` = '"..id.."'")
                 if Config.RecieveSoldLabCash then
                     xPlayer.Functions.AddMoney("cash",sellPrice)
                 else
@@ -99,7 +99,7 @@ end)
 -- Get Supplies:
  RSCore.Functions.CreateCallback('t1ger_drugbusiness:getSupplies',function(source, cb, plyLabID)
     local xPlayer =  RSCore.Functions.GetPlayer(source)
-    RSCore.Functions.ExecuteSql(false,"SELECT `supplies` FROM `t1ger_druglabs` WHERE `labID` = '"..plyLabID.."'",function(data)
+    exports['ghmattimysql']:execute("SELECT `supplies` FROM `t1ger_druglabs` WHERE `labID` = '"..plyLabID.."'",function(data)
         if data[1].supplies ~= nil then
             local supplies = data[1].supplies
             cb(supplies)
@@ -112,7 +112,7 @@ end)
 -- Get Stock:
  RSCore.Functions.CreateCallback('t1ger_drugbusiness:getStock',function(source, cb, plyLabID)
     local xPlayer =  RSCore.Functions.GetPlayer(source)
-    RSCore.Functions.ExecuteSql(false,"SELECT `stock` FROM `t1ger_druglabs` WHERE `labID` = '"..plyLabID.."'",function(data)
+    exports['ghmattimysql']:execute("SELECT `stock` FROM `t1ger_druglabs` WHERE `labID` = '"..plyLabID.."'",function(data)
         if data[1].stock ~= nil then
             local stock = data[1].stock
             cb(stock)
@@ -125,7 +125,7 @@ end)
 -- Buy Supplies:
  RSCore.Functions.CreateCallback('t1ger_drugbusiness:buySupplies',function(source, cb, plyLabID)
     local xPlayer =  RSCore.Functions.GetPlayer(source)
-    RSCore.Functions.ExecuteSql(false, "SELECT `supplies` FROM `t1ger_druglabs` WHERE `labID` = '"..plyLabID.."'",function(data)
+    exports['ghmattimysql']:execute( "SELECT `supplies` FROM `t1ger_druglabs` WHERE `labID` = '"..plyLabID.."'",function(data)
         if data[1].supplies ~= nil then
             local supplies = data[1].supplies
             if supplies < 5 then
@@ -137,7 +137,7 @@ end)
                     TriggerClientEvent('t1ger_drugbusiness:ShowNotifyESX', xPlayer.PlayerData.source, (Lang['supplies_purchased']:format(maxSupplies,priceSupplyLevel)))
                     -- UPDATE DATABASE:
 
-                    RSCore.Functions.ExecuteSql(false,"UPDATE `t1ger_druglabs` SET `supplies` = 5 WHERE `labID` = '"..plyLabID.."'")
+                    exports['ghmattimysql']:execute("UPDATE `t1ger_druglabs` SET `supplies` = 5 WHERE `labID` = '"..plyLabID.."'")
                     cb(true)
                 else
                     cb(false)
@@ -153,7 +153,7 @@ end)
 RegisterServerEvent('t1ger_drugbusiness:alertLabOwner')
 AddEventHandler('t1ger_drugbusiness:alertLabOwner', function(plyLabID, type)
     local target = nil
-    RSCore.Functions.ExecuteSql(false,"SELECT `identifier` FROM `t1ger_druglabs` WHERE `labID` = '"..plyLabID.."'",function(data)
+    exports['ghmattimysql']:execute("SELECT `identifier` FROM `t1ger_druglabs` WHERE `labID` = '"..plyLabID.."'",function(data)
         if data[1] ~= nil then
             local  targetIdentifier = data[1].identifier
             Wait(200)
@@ -176,7 +176,7 @@ AddEventHandler('t1ger_drugbusiness:seizeStockSupplies', function(plyLabID)
   
     -- GET TARGET PLAYER:
     local target = nil
-    RSCore.Functions.ExecuteSql(false,"SELECT `identifier` FROM `t1ger_druglabs` WHERE `labID` = '"..plyLabID.."'",function(user)
+    exports['ghmattimysql']:execute("SELECT `identifier` FROM `t1ger_druglabs` WHERE `labID` = '"..plyLabID.."'",function(user)
         print(user[1].identifier)
         if user[1].identifier ~= nil then
             local  targetIdentifier = user[1].identifier
@@ -184,16 +184,16 @@ AddEventHandler('t1ger_drugbusiness:seizeStockSupplies', function(plyLabID)
             target =  RSCore.Functions.GetPlayerByCitizenId(targetIdentifier)
             if target ~= nil then
                 print("ID recived "..tostring(target))
-                RSCore.Functions.ExecuteSql(false,"SELECT * FROM `t1ger_druglabs` WHERE `labID` = '"..plyLabID.."'",function(data)
+                exports['ghmattimysql']:execute("SELECT * FROM `t1ger_druglabs` WHERE `labID` = '"..plyLabID.."'",function(data)
                     if data[1] ~= nil then
-                        RSCore.Functions.ExecuteSql("UPDATE `t1ger_druglabs` SET `supplies` = 0, `stock` = 0 WHERE `labID` = '"..plyLabID.."'")
+                        exports['ghmattimysql']:execute("UPDATE `t1ger_druglabs` SET `supplies` = 0, `stock` = 0 WHERE `labID` = '"..plyLabID.."'")
                     end
                 end)
             else
                 if Config.RaidLabWhenPlayerOffline then
-                    RSCore.Functions.ExecuteSql(false,"SELECT * FROM `t1ger_druglabs` WHERE `labID` = '"..plyLabID.."'",function(data)
+                    exports['ghmattimysql']:execute("SELECT * FROM `t1ger_druglabs` WHERE `labID` = '"..plyLabID.."'",function(data)
                         if data[1] ~= nil then
-                            RSCore.Functions.ExecuteSql("UPDATE `t1ger_druglabs` SET `supplies` = 0, `stock` = 0 WHERE `labID` = '"..plyLabID.."'")
+                            exports['ghmattimysql']:execute("UPDATE `t1ger_druglabs` SET `supplies` = 0, `stock` = 0 WHERE `labID` = '"..plyLabID.."'")
                         end
                     end)
                 else
@@ -212,20 +212,20 @@ AddEventHandler('t1ger_drugbusiness:robStockSupplies', function(targetID, plyLab
     local xPlayer =  RSCore.Functions.GetPlayer(source)
     -- GET TARGET PLAYER:
     local target = nil
-    RSCore.Functions.ExecuteSql(false,"SELECT identifier FROM t1ger_druglabs WHERE labID = '"..targetID.."'",function(user)
+    exports['ghmattimysql']:execute("SELECT identifier FROM t1ger_druglabs WHERE labID = '"..targetID.."'",function(user)
         local  targetIdentifier = user[1].identifier
         Wait(200)
         target =   RSCore.Functions.GetPlayerByCitizenId(targetIdentifier)
         if target ~= nil then
             local stock = 0
             local supplies = 0            
-            RSCore.Functions.ExecuteSql(false,"SELECT * FROM `t1ger_druglabs` WHERE `labID` = '"..targetID.."'", function(data)
+            exports['ghmattimysql']:execute("SELECT * FROM `t1ger_druglabs` WHERE `labID` = '"..targetID.."'", function(data)
                 if data[1] ~= nil then
                     stock = data[1].stock
                     supplies = data[1].supplies
-                    RSCore.Functions.ExecuteSql(false,"UPDATE `t1ger_druglabs` SET `supplies` = 0, `stock` = 0 WHERE `labID` = '"..targetID.."'")
+                    exports['ghmattimysql']:execute("UPDATE `t1ger_druglabs` SET `supplies` = 0, `stock` = 0 WHERE `labID` = '"..targetID.."'")
                 end
-                RSCore.Functions.ExecuteSql(false,"SELECT * FROM `t1ger_druglabs` WHERE `labID` = '"..plyLabID.."'",function(newData)
+                exports['ghmattimysql']:execute("SELECT * FROM `t1ger_druglabs` WHERE `labID` = '"..plyLabID.."'",function(newData)
                     if newData[1] ~= nil then
                         local newStock = 0
                         local newSupplies = 0
@@ -239,7 +239,7 @@ AddEventHandler('t1ger_drugbusiness:robStockSupplies', function(targetID, plyLab
                         else
                             newSupplies = newData[1].supplies + supplies
                         end
-                        RSCore.Functions.ExecuteSql(false,"UPDATE `t1ger_druglabs` SET `supplies` = '"..newSupplies.."',`stock` = '"..newStock.."' WHERE `labID` = '"..plyLabID.."'")
+                        exports['ghmattimysql']:execute("UPDATE `t1ger_druglabs` SET `supplies` = '"..newSupplies.."',`stock` = '"..newStock.."' WHERE `labID` = '"..plyLabID.."'")
                     end
                 end)
             end)
@@ -247,13 +247,13 @@ AddEventHandler('t1ger_drugbusiness:robStockSupplies', function(targetID, plyLab
             if Config.RobLabWhenPlayerOffline then 
                 local stock = 0
                 local supplies = 0            
-                RSCore.Functions.ExecuteSql(false,"SELECT * FROM `t1ger_druglabs` WHERE `labID` = '"..targetID.."'", function(data)
+                exports['ghmattimysql']:execute("SELECT * FROM `t1ger_druglabs` WHERE `labID` = '"..targetID.."'", function(data)
                     if data[1] ~= nil then
                         stock = data[1].stock
                         supplies = data[1].supplies
-                        RSCore.Functions.ExecuteSql(false,"UPDATE `t1ger_druglabs` SET `supplies` = 0, `stock` = 0 WHERE `labID` = '"..targetID.."'")
+                        exports['ghmattimysql']:execute("UPDATE `t1ger_druglabs` SET `supplies` = 0, `stock` = 0 WHERE `labID` = '"..targetID.."'")
                     end
-                    RSCore.Functions.ExecuteSql(false,"SELECT * FROM `t1ger_druglabs` WHERE `labID` = '"..plyLabID.."'",function(newData)
+                    exports['ghmattimysql']:execute("SELECT * FROM `t1ger_druglabs` WHERE `labID` = '"..plyLabID.."'",function(newData)
                         if newData[1] ~= nil then
                             local newStock = 0
                             local newSupplies = 0
@@ -267,7 +267,7 @@ AddEventHandler('t1ger_drugbusiness:robStockSupplies', function(targetID, plyLab
                             else
                                 newSupplies = newData[1].supplies + supplies
                             end
-                            RSCore.Functions.ExecuteSql(false,"UPDATE `t1ger_druglabs` SET `supplies` = '"..newSupplies.."',`stock` = '"..newStock.."' WHERE `labID` = '"..plyLabID.."'")
+                            exports['ghmattimysql']:execute("UPDATE `t1ger_druglabs` SET `supplies` = '"..newSupplies.."',`stock` = '"..newStock.."' WHERE `labID` = '"..plyLabID.."'")
                         end
                     end)
                 end)
@@ -282,14 +282,14 @@ end)
 RegisterServerEvent('t1ger_drugbusiness:suppliesToStock')
 AddEventHandler('t1ger_drugbusiness:suppliesToStock', function(plyLabID)
     local xPlayer =  RSCore.Functions.GetPlayer(source)
-    RSCore.Functions.ExecuteSql(false,"SELECT * FROM `t1ger_druglabs` WHERE `labID` = '"..plyLabID.."'",function(data)
+    exports['ghmattimysql']:execute("SELECT * FROM `t1ger_druglabs` WHERE `labID` = '"..plyLabID.."'",function(data)
         if data[1] ~= nil then
             local supplies = data[1].supplies
             local stock = data[1].stock
             if supplies > 0 and stock < 5 then
                 supplies = supplies - 1
                 stock = stock + 1
-                RSCore.Functions.ExecuteSql(false,"UPDATE `t1ger_druglabs` SET `supplies` = '"..supplies.."',`stock` = '"..stock.."' WHERE `labID` = '"..plyLabID.."'")
+                exports['ghmattimysql']:execute("UPDATE `t1ger_druglabs` SET `supplies` = '"..supplies.."',`stock` = '"..stock.."' WHERE `labID` = '"..plyLabID.."'")
             else
                 if stock >= 5 then
                 elseif supplies <= 0 then
@@ -310,7 +310,7 @@ end)
 RegisterServerEvent('t1ger_drugbusiness:jobReward')
 AddEventHandler('t1ger_drugbusiness:jobReward',function(plyLabID)
     local xPlayer =  RSCore.Functions.GetPlayer(source)
-    RSCore.Functions.ExecuteSql(false,"SELECT `supplies` FROM `t1ger_druglabs` WHERE `labID` = '"..plyLabID.."'",function(data)
+    exports['ghmattimysql']:execute("SELECT `supplies` FROM `t1ger_druglabs` WHERE `labID` = '"..plyLabID.."'",function(data)
         if data[1] ~= nil then
             -- Get Current Supplies:
             local supplies = data[1].supplies
@@ -319,7 +319,7 @@ AddEventHandler('t1ger_drugbusiness:jobReward',function(plyLabID)
                 -- Add Supplies Level:
                 supplies = supplies + 1
                 -- UPDATE DATABASE:
-                RSCore.Functions.ExecuteSql(false,"UPDATE `t1ger_druglabs` SET `supplies` = '"..supplies.."' WHERE `labID` = '"..plyLabID.."'")
+                exports['ghmattimysql']:execute("UPDATE `t1ger_druglabs` SET `supplies` = '"..supplies.."' WHERE `labID` = '"..plyLabID.."'")
             end
         end
     end)
