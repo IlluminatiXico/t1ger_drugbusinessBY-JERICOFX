@@ -10,7 +10,7 @@ RegisterServerEvent('t1ger_drugbusiness:getPlyLabs')
 AddEventHandler('t1ger_drugbusiness:getPlyLabs', function()
     local xPlayer =  RSCore.Functions.GetPlayer(source)
  
-    RSCore.Functions.ExecuteSql(false,"SELECT `labID` FROM `t1ger_druglabs` WHERE `identifier` = '"..xPlayer.PlayerData.citizenID.."'", function(data)
+    RSCore.Functions.ExecuteSql(false,"SELECT `labID` FROM `t1ger_druglabs` WHERE `identifier` = '@"..xPlayer.PlayerData.citizenid.."'", function(data)
         local labID = 0
         if data[1] ~= nil then
             labID = data[1].labID
