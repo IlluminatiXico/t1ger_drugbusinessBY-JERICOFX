@@ -10,7 +10,7 @@ RegisterServerEvent('t1ger_drugbusiness:getPlyLabs')
 AddEventHandler('t1ger_drugbusiness:getPlyLabs', function()
     local xPlayer =  RSCore.Functions.GetPlayer(source)
  
-    MySQL.Async.fetchAll("SELECT labID FROM t1ger_druglabs WHERE identifier = @identifier",{['@identifier'] = xPlayer.PlayerData.steam}, function(data)
+    RSCore.Functions.ExecuteSql(false,"SELECT `labID` FROM `t1ger_druglabs` WHERE `identifier` = '"..xPlayer.PlayerData.citizenID.."'", function(data)
         local labID = 0
         if data[1] ~= nil then
             labID = data[1].labID
@@ -34,13 +34,10 @@ end)
 -- Remove Stock:
 RegisterServerEvent('t1ger_drugbusiness:removeStock')
 AddEventHandler('t1ger_drugbusiness:removeStock',function(plyLabID, stockLevel)
-    MySQL.Async.fetchAll("SELECT stock FROM t1ger_druglabs WHERE labID = @labID",{['@labID'] = plyLabID}, function(data)
+    RSCore.Functions.ExecuteSql(false, "SELECT `stock` FROM `t1ger_druglabs` WHERE `labID` = '"..plyLabID.."'", function(data)
         if data[1].stock ~= nil then
             local stock = data[1].stock
-            MySQL.Sync.execute("UPDATE t1ger_druglabs SET stock = @stock WHERE labID = @labID", {
-                ['@stock'] = 0,
-                ['@labID'] = plyLabID
-            })
+            RSCore.Functions.ExecuteSql(false, "UPDATE `t1ger_druglabs` SET `stock` = 0 WHERE `labID` = '"..plyLabID.."'")
         end
     end)
 end)
@@ -49,7 +46,7 @@ end)
 RSCore.Functions.CreateCallback('t1ger_drugbusiness:getTakenLabs',function(source, cb)
     local xPlayer =  RSCore.Functions.GetPlayer(source)
     local takenLabs = {}
-    MySQL.Async.fetchAll("SELECT labID FROM t1ger_druglabs",{}, function(data)
+    RSCore.Functions.ExecuteSql("SELECT `labID` FROM `t1ger_druglabs`", function(data)
         for k,v in pairs(data) do
             table.insert(takenLabs,{id = v.labID})
         end
@@ -72,8 +69,7 @@ end)
 		else
 			xPlayer.Functions.RemoveMoney("bank", val.price)
 		end
-        --MySQL.Async.execute("UPDATE users SET labID=@labID WHERE identifier=@identifier", {['@identifier'] = xPlayer.identifier, ['@labID'] = id}) 
-        MySQL.Sync.execute("INSERT INTO t1ger_druglabs (identifier, labID) VALUES (@identifier, @labID)", {['identifier'] = xPlayer.PlayerData.steam, ['labID'] = id})
+        RSCore.Functions.ExecuteSql(false,"INSERT INTO `t1ger_druglabs` (identifier, labID) VALUES ('"..xPlayer.PlayerData.citizenid.."','"..id.."'")       
         cb(true)
     else
         cb(false)
@@ -83,11 +79,10 @@ end)
 -- Sell Drug Lab:
  RSCore.Functions.CreateCallback('t1ger_drugbusiness:sellDrugLab',function(source, cb, id, val, sellPrice)
     local xPlayer =  RSCore.Functions.GetPlayer(source)
-    MySQL.Async.fetchAll("SELECT labID FROM t1ger_druglabs WHERE identifier = @identifier", {['@identifier'] = xPlayer.PlayerData.steam}, function(data)
+    RSCore.Functions.ExecuteSql(false, "SELECT `labID` FROM `t1ger_druglabs` WHERE `identifier` = '"..xPlayer.PlayerData.citizenid.."'", function(data)
         if data[1].labID ~= nil then 
             if data[1].labID == id then
-                --MySQL.Async.execute("UPDATE users SET labID=@labID WHERE identifier=@identifier", {['@identifier'] = xPlayer.identifier, ['@labID'] = 0}) 
-                MySQL.Async.execute("DELETE FROM t1ger_druglabs WHERE labID=@labID", {['@labID'] = id}) 
+                RSCore.Functions.ExecuteSql(false, "DELETE FROM `t1ger_druglabs` WHERE `labID` = '"..id.."'")
                 if Config.RecieveSoldLabCash then
                     xPlayer.Functions.AddMoney("cash",sellPrice)
                 else
@@ -104,7 +99,7 @@ end)
 -- Get Supplies:
  RSCore.Functions.CreateCallback('t1ger_drugbusiness:getSupplies',function(source, cb, plyLabID)
     local xPlayer =  RSCore.Functions.GetPlayer(source)
-    MySQL.Async.fetchAll("SELECT supplies FROM t1ger_druglabs WHERE labID = @labID", {['@labID'] = plyLabID}, function(data)
+    RSCore.Functions.ExecuteSql(false,"SELECT `supplies` FROM `t1ger_druglabs` WHERE `labID` = '"..plyLabID.."'",function(data)
         if data[1].supplies ~= nil then
             local supplies = data[1].supplies
             cb(supplies)
@@ -117,10 +112,12 @@ end)
 -- Get Stock:
  RSCore.Functions.CreateCallback('t1ger_drugbusiness:getStock',function(source, cb, plyLabID)
     local xPlayer =  RSCore.Functions.GetPlayer(source)
-    MySQL.Async.fetchAll("SELECT stock FROM t1ger_druglabs WHERE labID = @labID", {['@labID'] = plyLabID}, function(data)
+    RSCore.Functions.ExecuteSql(false,"SELECT `stock` FROM `t1ger_druglabs` WHERE `labID` = '"..plyLabID.."'",function(data)
         if data[1].stock ~= nil then
             local stock = data[1].stock
             cb(stock)
+        else
+            cb(nil)
         end
     end)
 end)
@@ -128,7 +125,7 @@ end)
 -- Buy Supplies:
  RSCore.Functions.CreateCallback('t1ger_drugbusiness:buySupplies',function(source, cb, plyLabID)
     local xPlayer =  RSCore.Functions.GetPlayer(source)
-    MySQL.Async.fetchAll("SELECT supplies FROM t1ger_druglabs WHERE labID = @labID", {['@labID'] = plyLabID}, function(data)
+    RSCore.Functions.ExecuteSql(false, "SELECT `supplies` FROM `t1ger_druglabs` WHERE `labID` = '"..plyLabID.."'",function(data)
         if data[1].supplies ~= nil then
             local supplies = data[1].supplies
             if supplies < 5 then
@@ -139,10 +136,8 @@ end)
                     xPlayer.Functions.RemoveMoney('bank', priceSupplyLevel)
                     TriggerClientEvent('t1ger_drugbusiness:ShowNotifyESX', xPlayer.PlayerData.source, (Lang['supplies_purchased']:format(maxSupplies,priceSupplyLevel)))
                     -- UPDATE DATABASE:
-                    MySQL.Sync.execute("UPDATE t1ger_druglabs SET supplies = @supplies WHERE labID = @labID", {
-                        ['@supplies'] = 5,
-                        ['@labID'] = plyLabID
-                    })
+
+                    RSCore.Functions.ExecuteSql(false,"UPDATE `t1ger_druglabs` SET `supplies` = 5 WHERE `labID` = '"..plyLabID.."'")
                     cb(true)
                 else
                     cb(false)
@@ -158,12 +153,11 @@ end)
 RegisterServerEvent('t1ger_drugbusiness:alertLabOwner')
 AddEventHandler('t1ger_drugbusiness:alertLabOwner', function(plyLabID, type)
     local target = nil
-    MySQL.Async.fetchAll("SELECT identifier FROM t1ger_druglabs WHERE labID = @labID",{['@labID'] = plyLabID}, function(data)
+    RSCore.Functions.ExecuteSql(false,"SELECT `identifier` FROM `t1ger_druglabs` WHERE `labID` = '"..plyLabID.."'",function(data)
         if data[1] ~= nil then
             local  targetIdentifier = data[1].identifier
             Wait(200)
             target =  RSCore.Functions.GetPlayer(targetIdentifier)
-            targetsteam = target.PlayerData.steam
             if type == "police" then
                 TriggerClientEvent('t1ger_drugbusiness:ShowNotifyESX', target.PlayerData.source, Lang['lab_raid_on_going'])
             elseif type == "player" then
@@ -182,32 +176,24 @@ AddEventHandler('t1ger_drugbusiness:seizeStockSupplies', function(plyLabID)
   
     -- GET TARGET PLAYER:
     local target = nil
-    MySQL.Async.fetchAll("SELECT identifier FROM t1ger_druglabs WHERE labID = @labID",{['@labID'] = plyLabID}, function(user)
+    RSCore.Functions.ExecuteSql(false,"SELECT `identifier` FROM `t1ger_druglabs` WHERE `labID` = '"..plyLabID.."'",function(user)
         print(user[1].identifier)
         if user[1].identifier ~= nil then
             local  targetIdentifier = user[1].identifier
             Wait(200)
-            target =  RSCore.Functions.GetPlayer(targetIdentifier).PlayerData.steam
+            target =  RSCore.Functions.GetPlayerByCitizenId(targetIdentifier)
             if target ~= nil then
                 print("ID recived "..tostring(target))
-                MySQL.Async.fetchAll("SELECT * FROM t1ger_druglabs WHERE labID = @labID",{['@labID'] = plyLabID}, function(data)
+                RSCore.Functions.ExecuteSql(false,"SELECT * FROM `t1ger_druglabs` WHERE `labID` = '"..plyLabID.."'",function(data)
                     if data[1] ~= nil then
-                        MySQL.Sync.execute("UPDATE t1ger_druglabs SET supplies = @supplies, stock = @stock WHERE labID = @labID", {
-                            ['@supplies'] = 0,
-                            ['@stock'] = 0,
-                            ['@labID'] = plyLabID
-                        })
+                        RSCore.Functions.ExecuteSql("UPDATE `t1ger_druglabs` SET `supplies` = 0, `stock` = 0 WHERE `labID` = '"..plyLabID.."'")
                     end
                 end)
             else
                 if Config.RaidLabWhenPlayerOffline then
-                    MySQL.Async.fetchAll("SELECT * FROM t1ger_druglabs WHERE labID = @labID",{['@labID'] = plyLabID}, function(data)
+                    RSCore.Functions.ExecuteSql(false,"SELECT * FROM `t1ger_druglabs` WHERE `labID` = '"..plyLabID.."'",function(data)
                         if data[1] ~= nil then
-                            MySQL.Sync.execute("UPDATE t1ger_druglabs SET supplies = @supplies, stock = @stock WHERE labID = @labID", {
-                                ['@supplies'] = 0,
-                                ['@stock'] = 0,
-                                ['@labID'] = plyLabID
-                            })
+                            RSCore.Functions.ExecuteSql("UPDATE `t1ger_druglabs` SET `supplies` = 0, `stock` = 0 WHERE `labID` = '"..plyLabID.."'")
                         end
                     end)
                 else
@@ -226,24 +212,20 @@ AddEventHandler('t1ger_drugbusiness:robStockSupplies', function(targetID, plyLab
     local xPlayer =  RSCore.Functions.GetPlayer(source)
     -- GET TARGET PLAYER:
     local target = nil
-    MySQL.Async.fetchAll("SELECT identifier FROM t1ger_druglabs WHERE labID = @labID",{['@labID'] = targetID}, function(user)
+    RSCore.Functions.ExecuteSql(false,"SELECT identifier FROM t1ger_druglabs WHERE labID = '"..targetID.."'",function(user)
         local  targetIdentifier = user[1].identifier
         Wait(200)
-        target =   RSCore.Functions.GetPlayer(targetIdentifier).PlayerData.steam
+        target =   RSCore.Functions.GetPlayerByCitizenId(targetIdentifier)
         if target ~= nil then
             local stock = 0
-            local supplies = 0
-            MySQL.Async.fetchAll("SELECT * FROM t1ger_druglabs WHERE labID = @labID",{['@labID'] = targetID}, function(data)
+            local supplies = 0            
+            RSCore.Functions.ExecuteSql(false,"SELECT * FROM `t1ger_druglabs` WHERE `labID` = '"..targetID.."'", function(data)
                 if data[1] ~= nil then
                     stock = data[1].stock
                     supplies = data[1].supplies
-                    MySQL.Sync.execute("UPDATE t1ger_druglabs SET supplies = @supplies, stock = @stock WHERE labID = @labID", {
-                        ['@supplies'] = 0,
-                        ['@stock'] = 0,
-                        ['@labID'] = targetID
-                    })
+                    RSCore.Functions.ExecuteSql(false,"UPDATE `t1ger_druglabs` SET `supplies` = 0, `stock` = 0 WHERE `labID` = '"..targetID.."'")
                 end
-                MySQL.Async.fetchAll("SELECT * FROM t1ger_druglabs WHERE labID = @labID",{['@labID'] = plyLabID}, function(newData)
+                RSCore.Functions.ExecuteSql(false,"SELECT * FROM `t1ger_druglabs` WHERE `labID` = '"..plyLabID.."'",function(newData)
                     if newData[1] ~= nil then
                         local newStock = 0
                         local newSupplies = 0
@@ -257,29 +239,21 @@ AddEventHandler('t1ger_drugbusiness:robStockSupplies', function(targetID, plyLab
                         else
                             newSupplies = newData[1].supplies + supplies
                         end
-                        MySQL.Sync.execute("UPDATE t1ger_druglabs SET supplies = @supplies, stock = @stock WHERE labID = @labID", {
-                            ['@supplies'] = newSupplies,
-                            ['@stock'] = newStock,
-                            ['@labID'] = plyLabID
-                        })
+                        RSCore.Functions.ExecuteSql(false,"UPDATE `t1ger_druglabs` SET `supplies` = '"..newSupplies.."',`stock` = '"..newStock.."' WHERE `labID` = '"..plyLabID.."'")
                     end
                 end)
             end)
         else
             if Config.RobLabWhenPlayerOffline then 
                 local stock = 0
-                local supplies = 0
-                MySQL.Async.fetchAll("SELECT * FROM t1ger_druglabs WHERE labID = @labID",{['@labID'] = targetID}, function(data)
+                local supplies = 0            
+                RSCore.Functions.ExecuteSql(false,"SELECT * FROM `t1ger_druglabs` WHERE `labID` = '"..targetID.."'", function(data)
                     if data[1] ~= nil then
                         stock = data[1].stock
                         supplies = data[1].supplies
-                        MySQL.Sync.execute("UPDATE t1ger_druglabs SET supplies = @supplies, stock = @stock WHERE labID = @labID", {
-                            ['@supplies'] = 0,
-                            ['@stock'] = 0,
-                            ['@labID'] = targetID
-                        })
+                        RSCore.Functions.ExecuteSql(false,"UPDATE `t1ger_druglabs` SET `supplies` = 0, `stock` = 0 WHERE `labID` = '"..targetID.."'")
                     end
-                    MySQL.Async.fetchAll("SELECT * FROM t1ger_druglabs WHERE labID = @labID",{['@labID'] = plyLabID}, function(newData)
+                    RSCore.Functions.ExecuteSql(false,"SELECT * FROM `t1ger_druglabs` WHERE `labID` = '"..plyLabID.."'",function(newData)
                         if newData[1] ~= nil then
                             local newStock = 0
                             local newSupplies = 0
@@ -293,11 +267,7 @@ AddEventHandler('t1ger_drugbusiness:robStockSupplies', function(targetID, plyLab
                             else
                                 newSupplies = newData[1].supplies + supplies
                             end
-                            MySQL.Sync.execute("UPDATE t1ger_druglabs SET supplies = @supplies, stock = @stock WHERE labID = @labID", {
-                                ['@supplies'] = newSupplies,
-                                ['@stock'] = newStock,
-                                ['@labID'] = plyLabID
-                            })
+                            RSCore.Functions.ExecuteSql(false,"UPDATE `t1ger_druglabs` SET `supplies` = '"..newSupplies.."',`stock` = '"..newStock.."' WHERE `labID` = '"..plyLabID.."'")
                         end
                     end)
                 end)
@@ -312,18 +282,14 @@ end)
 RegisterServerEvent('t1ger_drugbusiness:suppliesToStock')
 AddEventHandler('t1ger_drugbusiness:suppliesToStock', function(plyLabID)
     local xPlayer =  RSCore.Functions.GetPlayer(source)
-    MySQL.Async.fetchAll("SELECT * FROM t1ger_druglabs WHERE labID = @labID",{['@labID'] = plyLabID}, function(data)
+    RSCore.Functions.ExecuteSql(false,"SELECT * FROM `t1ger_druglabs` WHERE `labID` = '"..plyLabID.."'",function(data)
         if data[1] ~= nil then
             local supplies = data[1].supplies
             local stock = data[1].stock
             if supplies > 0 and stock < 5 then
                 supplies = supplies - 1
                 stock = stock + 1
-                MySQL.Sync.execute("UPDATE t1ger_druglabs SET supplies = @supplies, stock = @stock WHERE labID = @labID", {
-                    ['@supplies'] = supplies,
-                    ['@stock'] = stock,
-                    ['@labID'] = plyLabID
-                })
+                RSCore.Functions.ExecuteSql(false,"UPDATE `t1ger_druglabs` SET `supplies` = '"..supplies.."',`stock` = '"..stock.."' WHERE `labID` = '"..plyLabID.."'")
             else
                 if stock >= 5 then
                 elseif supplies <= 0 then
@@ -344,7 +310,7 @@ end)
 RegisterServerEvent('t1ger_drugbusiness:jobReward')
 AddEventHandler('t1ger_drugbusiness:jobReward',function(plyLabID)
     local xPlayer =  RSCore.Functions.GetPlayer(source)
-    MySQL.Async.fetchAll("SELECT supplies FROM t1ger_druglabs WHERE labID = @labID",{['@labID'] = plyLabID}, function(data)
+    RSCore.Functions.ExecuteSql(false,"SELECT `supplies` FROM `t1ger_druglabs` WHERE `labID` = '"..plyLabID.."'",function(data)
         if data[1] ~= nil then
             -- Get Current Supplies:
             local supplies = data[1].supplies
@@ -353,10 +319,7 @@ AddEventHandler('t1ger_drugbusiness:jobReward',function(plyLabID)
                 -- Add Supplies Level:
                 supplies = supplies + 1
                 -- UPDATE DATABASE:
-                MySQL.Sync.execute("UPDATE t1ger_druglabs SET supplies = @supplies WHERE labID = @labID", {
-                    ['@supplies'] = supplies,
-                    ['@labID'] = plyLabID
-                })
+                RSCore.Functions.ExecuteSql(false,"UPDATE `t1ger_druglabs` SET `supplies` = '"..supplies.."' WHERE `labID` = '"..plyLabID.."'")
             end
         end
     end)
