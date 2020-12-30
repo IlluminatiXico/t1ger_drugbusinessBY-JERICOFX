@@ -20,13 +20,16 @@ Citizen.CreateThread(function()
 			SetRainFxIntensity(0.0)
 		end
 	end
+	if playerloaded then
+		TriggerServerEvent("t1ger_drugbusiness:getPlyLabs")
+	end
 end)
 
 RegisterNetEvent('RSCore:Client:OnPlayerLoaded')
 AddEventHandler('RSCore:Client:OnPlayerLoaded', function()
 playerloaded = true
 Wait(2000)
-	TriggerServerEvent("t1ger_drugbusiness:getPlyLabs")
+	
 end)
 
 RegisterNetEvent('t1ger_drugbusiness:JobDataCL')
