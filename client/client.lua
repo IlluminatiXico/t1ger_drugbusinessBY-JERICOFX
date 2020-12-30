@@ -25,6 +25,7 @@ end)
 RegisterNetEvent('RSCore:Client:OnPlayerLoaded')
 AddEventHandler('RSCore:Client:OnPlayerLoaded', function()
 playerloaded = true
+Wait(2000)
 	TriggerServerEvent("t1ger_drugbusiness:getPlyLabs")
 end)
 
