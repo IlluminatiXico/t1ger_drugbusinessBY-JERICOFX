@@ -77,6 +77,8 @@ RegisterNetEvent("t1ger_drugbusiness:getPlayerIden")
 AddEventHandler("t1ger_drugbusiness:getPlayerIden", function()
 	TriggerServerEvent("t1ger_drugbusiness:getPlyLabs")
 end)
+
+
 RegisterNetEvent('t1ger_drugbusiness:applyPlyLabID')
 AddEventHandler('t1ger_drugbusiness:applyPlyLabID', function(labID)
 	-- get player lab id:
